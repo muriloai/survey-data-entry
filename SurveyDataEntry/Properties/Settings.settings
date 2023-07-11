@@ -1,0 +1,24 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="survey_data_entry_tabulador_pesquisas.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="serverLocal" Type="System.String" Scope="User">
+      <Value Profile="(Default)">localhost</Value>
+    </Setting>
+    <Setting Name="bdNome" Type="System.String" Scope="User">
+      <Value Profile="(Default)">db_survey_data_entry</Value>
+    </Setting>
+    <Setting Name="usuario1" Type="System.String" Scope="User">
+      <Value Profile="(Default)">survey_user</Value>
+    </Setting>
+    <Setting Name="senha1" Type="System.String" Scope="User">
+      <Value Profile="(Default)">sde2014</Value>
+    </Setting>
+    <Setting Name="loginAdmin" Type="System.String" Scope="User">
+      <Value Profile="(Default)">admin</Value>
+    </Setting>
+    <Setting Name="senhaAdmin" Type="System.String" Scope="User">
+      <Value Profile="(Default)">sde2014</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
