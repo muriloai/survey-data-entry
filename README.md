@@ -1,14 +1,25 @@
 # Survey Data Entry
 
-Sistema de coleta, digitação ágil e tabulação de pesquisas estruturadas.
+Sistema em desenvolvimento para organizar pesquisas e agilizar o registro de respostas.
 
-## Origem (2014)
+## Por que este projeto existe?
 
-O projeto nasceu em **2014** para resolver um gargalo real de digitação de formulários físicos aplicados em campo, substituindo processos lentos por uma interface orientada a atalhos de teclado com operação simultânea em rede.
+O Survey Data Entry surgiu em 2014 para reduzir o tempo de digitação de pesquisas em papel. A nova versão leva essa experiência para a web, preservando o foco em preenchimento rápido e revisão das respostas.
 
-- Leia a história completa em [docs/HISTORIA.md](docs/HISTORIA.md).
-- O código-fonte e os scripts originais de 2014 estão preservados em [`docs/sistema-versao-2014/`](docs/sistema-versao-2014/).
+## Situação atual
 
-## Futuro da solução
+A reconstrução está em andamento. A solução já contém a base do domínio, uma aplicação Blazor e o esquema inicial de contas. Os fluxos de autenticação e os recursos de pesquisa ainda estão sendo implementados e validados; o sistema não está pronto para dados reais.
 
-Como evolução natural do projeto, há a visão de levar o **Survey Data Entry** para o ambiente **web**, estruturado em **frontend + backend**, mantendo os mesmos princípios que deram origem ao sistema: velocidade de preenchimento por teclado, possibilidade de revisão imediata das respostas, operação simultânea por múltiplos operadores e confiabilidade na consolidação dos dados, sem depender de instalação local nas estações de trabalho.
+## Tecnologias
+
+- .NET 10, ASP.NET Core e Blazor
+- Entity Framework Core e SQL Server
+- ASP.NET Core Identity
+
+## Documentação
+
+- [Como executar e verificar](docs/desenvolvimento.md)
+- [Decisões de arquitetura](docs/adr/README.md)
+- [História do projeto](docs/HISTORIA.md)
+- [Capturas de tela](docs/screenshots/README.md)
+- [Licença](LICENSE)
