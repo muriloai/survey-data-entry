@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SurveyDataEntry.Application/SurveyDataEntry.Application.csproj" />
+    <Project Path="src/SurveyDataEntry.Contracts/SurveyDataEntry.Contracts.csproj" />
+    <Project Path="src/SurveyDataEntry.Domain/SurveyDataEntry.Domain.csproj" />
+    <Project Path="src/SurveyDataEntry.Infrastructure/SurveyDataEntry.Infrastructure.csproj" />
+    <Project Path="src/SurveyDataEntry.Web/SurveyDataEntry.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SurveyDataEntry.Domain.Tests/SurveyDataEntry.Domain.Tests.csproj" />
+    <Project Path="tests/SurveyDataEntry.Integration.Tests/SurveyDataEntry.Integration.Tests.csproj" />
+  </Folder>
+</Solution>

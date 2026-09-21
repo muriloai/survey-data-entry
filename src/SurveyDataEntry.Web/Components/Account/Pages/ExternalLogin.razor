@@ -1,0 +1,26 @@
+@page "/Account/ExternalLogin"
+@using Microsoft.AspNetCore.Identity
+@using SurveyDataEntry.Infrastructure.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityRedirectManager RedirectManager
+
+@code {
+    public const string LoginCallbackAction = "LoginCallback";
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+    [SupplyParameterFromQuery] private string? Action { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var info = await SignInManager.GetExternalLoginInfoAsync();
+        if (info is not null && Action == LoginCallbackAction)
+        {
+            var result = await SignInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, false, bypassTwoFactor: false);
+            if (result.Succeeded) { RedirectManager.RedirectTo(ReturnUrl); return; }
+            if (result.IsLockedOut) { RedirectManager.RedirectTo("Account/Lockout"); return; }
+            if (result.RequiresTwoFactor) { RedirectManager.RedirectTo("Account/LoginWith2fa", new() { ["returnUrl"] = ReturnUrl }); return; }
+        }
+        RedirectManager.RedirectToWithStatus("Account/Login", "Sign in to an existing account before linking an external provider.", HttpContext);
+    }
+}
+
