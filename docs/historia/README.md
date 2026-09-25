@@ -47,4 +47,4 @@ Todo o código-fonte legado e os scripts de banco de dados da versão original d
 
 ---
 
-[Voltar para o README principal](../../README.md)
+[Voltar para o início](../../README.md)

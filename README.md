@@ -20,6 +20,6 @@ A reconstrução está em andamento. A solução já contém a base do domínio,
 
 - [Como executar e verificar](docs/desenvolvimento.md)
 - [Decisões de arquitetura](docs/adr/README.md)
-- [História do projeto](docs/HISTORIA.md)
+- [História do projeto](docs/historia/README.md)
 - [Capturas de tela](docs/screenshots/README.md)
 - [Licença](LICENSE)

@@ -8,13 +8,19 @@
 
 ## Banco de desenvolvimento
 
-Configure `ConnectionStrings:DefaultConnection` por variáveis de ambiente ou user secrets. Para criar o esquema em um banco vazio de desenvolvimento, execute:
+Configure `ConnectionStrings:DefaultConnection` por variáveis de ambiente ou user secrets.
+
+E para criar o esquema em um banco vazio de desenvolvimento, execute:
 
 ```powershell
 dotnet ef database update --project src/SurveyDataEntry.Web
 ```
 
-A aplicação não aplica migrações ao iniciar. O script idempotente gerado está em `src/SurveyDataEntry.Infrastructure/Identity/Migrations/identity.sql`. Em produção, use uma tarefa de migração separada e credenciais distintas para DDL e operação.
+A aplicação não aplica migrações ao iniciar.
+
+O script completo do banco gerado está em `src/SurveyDataEntry.Infrastructure/Identity/Migrations/identity.sql`.
+
+Em produção, use uma tarefa de migração separada e credenciais distintas para DDL e operação.
 
 ## Execução
 
@@ -22,9 +28,11 @@ A aplicação não aplica migrações ao iniciar. O script idempotente gerado es
 dotnet run --project src/SurveyDataEntry.Web
 ```
 
-Em `Development`, as mensagens de confirmação e recuperação são gravadas em `src/SurveyDataEntry.Web/App_Data/mail`, que não deve ser compartilhado. Fora de desenvolvimento ainda é necessário implementar e configurar o envio de e-mail. Não use esta versão com dados reais.
+Em `Development`, as mensagens de confirmação e recuperação são gravadas em `src/SurveyDataEntry.Web/App_Data/mail`, que não deve ser compartilhado.
 
-## Verificação inicial
+E fora de desenvolvimento ainda é necessário implementar e configurar o envio de e-mail, contudo, não use esta versão com dados reais.
+
+## Testes
 
 ```powershell
 dotnet build SurveyDataEntry.slnx
@@ -32,5 +40,8 @@ dotnet test tests/SurveyDataEntry.Domain.Tests
 dotnet test tests/SurveyDataEntry.Integration.Tests
 ```
 
-Os testes unitários cobrem regras iniciais do domínio. O teste de integração requer SQL Server LocalDB no Windows e cria um banco exclusivo, removido ao finalizar. Ele verifica migração, confirmação de conta, troca de senha e rejeição de token reutilizado. A cobertura dos fluxos web ainda está em desenvolvimento.
+Os **testes unitários** cobrem regras iniciais do domínio.
 
+O **teste de integração** requer SQL Server LocalDB no Windows o qual será usado para criar um banco exclusivo e removê-lo ao finalizar, portanto, este teste busca verificar migração, confirmação de conta, troca de senha e rejeição de token reutilizado.
+
+A cobertura dos fluxos web ainda está em desenvolvimento.

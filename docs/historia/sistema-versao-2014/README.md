@@ -1,9 +1,8 @@
 # Sistema Original
 
-Esta pasta preserva o código-fonte e os scripts de banco de dados da versão original criada em **2014**
-É uma aplicação desktop Windows Forms em C# / .NET Framework e MySQL.
+Esta pasta preserva o código-fonte e os scripts de banco de dados da versão original criada em **2014**, se trata de uma aplicação desktop Windows Forms em C# / .NET Framework e MySQL.
 
-Para conhecer o contexto completo de negócio, métricas e motivos das decisões tomadas na época, veja o documento de **[História do Projeto (HISTORIA.md)](../HISTORIA.md)**
+Para conhecer o contexto completo de negócio, métricas e motivos das decisões tomadas na época, veja o documento de **[História do Projeto](../README.md)**
 
 ---
 
@@ -16,4 +15,4 @@ Para conhecer o contexto completo de negócio, métricas e motivos das decisões
 
 ---
 
-[Voltar para a História do Sistema](../HISTORIA.md) | [Voltar para o README principal](../../../README.md)
+[Voltar para a História do Sistema](../README.md) | [Voltar para o início](../../../README.md)
