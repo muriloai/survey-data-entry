@@ -6,6 +6,10 @@ using SurveyDataEntry.Web.Components.Account;
 using SurveyDataEntry.Infrastructure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<SurveyDataEntry.Application.ICurrentAccount, SurveyDataEntry.Web.CurrentAccount>();
+builder.Services.AddScoped<SurveyDataEntry.Application.ICatalogStore, SurveyDataEntry.Infrastructure.CatalogStore>();
+builder.Services.AddScoped<SurveyDataEntry.Application.SurveyCatalog>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

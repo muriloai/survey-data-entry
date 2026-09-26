@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SurveyDataEntry.Infrastructure.Identity;
 using Xunit;
+using SurveyDataEntry.Application;
+using SurveyDataEntry.Infrastructure;
+using SurveyDataEntry.Domain;
 
 public sealed class AccountPersistenceTests
 {
@@ -36,7 +39,22 @@ public sealed class AccountPersistenceTests
             Assert.True(persisted.EmailConfirmed);
             Assert.True(await users.CheckPasswordAsync(persisted, "New-Password456!"));
             Assert.False(await users.CheckPasswordAsync(persisted, "Initial-Password123!"));
+            var first = new SurveyCatalog(new TestAccount(user.Id), new CatalogStore(db));
+            var clientId = await first.CreateClientAsync("Client A");
+            await first.CreateSurveyAsync(clientId, "Survey A", SurveyMode.Paper);
+            var otherUser = new ApplicationUser { UserName = "other@example.test", Email = "other@example.test", EmailConfirmed = true };
+            Assert.True((await users.CreateAsync(otherUser, "Other-Password123!")).Succeeded);
+            var second = new SurveyCatalog(new TestAccount(otherUser.Id), new CatalogStore(db));
+            Assert.Empty(await second.ListClientsAsync());
+            Assert.Empty(await second.ListSurveysAsync());
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => second.CreateSurveyAsync(clientId, "Forbidden", SurveyMode.Online));
+            Assert.Single(await first.ListSurveysAsync());
+            persisted.IsBlocked = true;
+            await users.UpdateAsync(persisted);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => first.ListClientsAsync());
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
+
+    private sealed record TestAccount(string Id) : ICurrentAccount;
 }

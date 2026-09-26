@@ -13,7 +13,7 @@ Configure `ConnectionStrings:DefaultConnection` por variáveis de ambiente ou us
 E para criar o esquema em um banco vazio de desenvolvimento, execute:
 
 ```powershell
-dotnet ef database update --project src/SurveyDataEntry.Web
+dotnet ef database update --project src/SurveyDataEntry.Infrastructure --startup-project src/SurveyDataEntry.Web
 ```
 
 A aplicação não aplica migrações ao iniciar.
@@ -45,3 +45,7 @@ Os **testes unitários** cobrem regras iniciais do domínio.
 O **teste de integração** requer SQL Server LocalDB no Windows o qual será usado para criar um banco exclusivo e removê-lo ao finalizar, portanto, este teste busca verificar migração, confirmação de conta, troca de senha e rejeição de token reutilizado.
 
 A cobertura dos fluxos web ainda está em desenvolvimento.
+
+## Catálogo
+
+Após confirmar a conta e entrar, acesse `/surveys` para cadastrar clientes e pesquisas. O catálogo confere o estado da conta a cada operação e restringe os registros ao proprietário. Não é possível criar uma pesquisa vinculada ao cliente de outra conta.

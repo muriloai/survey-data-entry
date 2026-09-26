@@ -212,3 +212,79 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127150321_AddSurveyCatalog'
+)
+BEGIN
+    ALTER TABLE [AspNetUsers] ADD [IsBlocked] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127150321_AddSurveyCatalog'
+)
+BEGIN
+    CREATE TABLE [Clients] (
+        [Id] uniqueidentifier NOT NULL,
+        [OwnerId] uniqueidentifier NOT NULL,
+        [Name] nvarchar(200) NOT NULL,
+        CONSTRAINT [PK_Clients] PRIMARY KEY ([Id]),
+        CONSTRAINT [AK_Clients_Id_OwnerId] UNIQUE ([Id], [OwnerId])
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127150321_AddSurveyCatalog'
+)
+BEGIN
+    CREATE TABLE [Surveys] (
+        [Id] uniqueidentifier NOT NULL,
+        [OwnerId] uniqueidentifier NOT NULL,
+        [ClientId] uniqueidentifier NOT NULL,
+        [Title] nvarchar(200) NOT NULL,
+        [Mode] int NOT NULL,
+        [Closed] bit NOT NULL,
+        CONSTRAINT [PK_Surveys] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_Surveys_Clients_ClientId_OwnerId] FOREIGN KEY ([ClientId], [OwnerId]) REFERENCES [Clients] ([Id], [OwnerId]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127150321_AddSurveyCatalog'
+)
+BEGIN
+    CREATE INDEX [IX_Clients_OwnerId] ON [Clients] ([OwnerId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127150321_AddSurveyCatalog'
+)
+BEGIN
+    CREATE INDEX [IX_Surveys_ClientId_OwnerId] ON [Surveys] ([ClientId], [OwnerId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127150321_AddSurveyCatalog'
+)
+BEGIN
+    CREATE INDEX [IX_Surveys_OwnerId] ON [Surveys] ([OwnerId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127150321_AddSurveyCatalog'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261127150321_AddSurveyCatalog', N'10.0.15');
+END;
+
+COMMIT;
+GO
+

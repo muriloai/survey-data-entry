@@ -1,0 +1,98 @@
+@page "/surveys"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.ComponentModel.DataAnnotations
+@using SurveyDataEntry.Application
+@using SurveyDataEntry.Contracts
+@using SurveyDataEntry.Domain
+@inject SurveyCatalog Catalog
+@inject NavigationManager Navigation
+
+<PageTitle>Surveys · Survey Data Entry</PageTitle>
+<main class="container py-4">
+    <h1>Surveys</h1>
+    <p><a href="/">Home</a> · <a href="/Account/Manage">Account</a></p>
+    @if (error is not null) { <p role="alert">@error</p> }
+    @if (allowed)
+    {
+        <h2>Clients</h2>
+        <EditForm Model="ClientInput" FormName="client" method="post" OnValidSubmit="CreateClient">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <label>Client name <InputText @bind-Value="ClientInput.Name" maxlength="200" /></label>
+            <button type="submit">Add client</button>
+        </EditForm>
+        <ul>@foreach (var client in clients) { <li>@client.Name</li> }</ul>
+        <h2>Create survey</h2>
+        @if (clients.Count == 0) { <p>Add a client to create a survey.</p> }
+        else
+        {
+            <EditForm Model="SurveyInput" FormName="survey" method="post" OnValidSubmit="CreateSurvey">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <label>Title <InputText @bind-Value="SurveyInput.Title" maxlength="200" /></label>
+                <label>Client <InputSelect @bind-Value="SurveyInput.ClientId"><option value="">Select a client</option>@foreach (var client in clients) { <option value="@client.Id">@client.Name</option> }</InputSelect></label>
+                <label>Collection mode <InputSelect @bind-Value="SurveyInput.Mode"><option value="Paper">Paper</option><option value="Online">Online</option></InputSelect></label>
+                <p>The collection mode cannot be changed after creation.</p>
+                <button type="submit">Create survey</button>
+            </EditForm>
+        }
+        <h2>Your surveys</h2>
+        <table><thead><tr><th>Title</th><th>Client</th><th>Mode</th></tr></thead><tbody>
+            @foreach (var survey in surveys)
+            {
+                <tr><td>@survey.Title</td><td>@clients.FirstOrDefault(c => c.Id == survey.ClientId)?.Name</td><td>@survey.Mode</td></tr>
+            }
+        </tbody></table>
+    }
+</main>
+
+@code {
+    [SupplyParameterFromForm(FormName = "client")] private ClientModel ClientInput { get; set; } = default!;
+    [SupplyParameterFromForm(FormName = "survey")] private SurveyModel SurveyInput { get; set; } = default!;
+    private IReadOnlyList<ClientSummary> clients = [];
+    private IReadOnlyList<SurveySummary> surveys = [];
+    private string? error;
+    private bool allowed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ClientInput ??= new();
+        SurveyInput ??= new();
+        try
+        {
+            clients = await Catalog.ListClientsAsync();
+            surveys = await Catalog.ListSurveysAsync();
+            allowed = true;
+        }
+        catch (UnauthorizedAccessException) { error = "Account access denied. Confirm your email or contact support."; }
+    }
+
+    private async Task CreateClient()
+    {
+        try { await Catalog.CreateClientAsync(ClientInput.Name); Navigation.NavigateTo("/surveys"); }
+        catch (ArgumentException) { error = "Enter a client name with up to 200 characters."; }
+        catch (UnauthorizedAccessException) { error = "Access denied."; }
+    }
+
+    private async Task CreateSurvey()
+    {
+        try
+        {
+            await Catalog.CreateSurveyAsync(SurveyInput.ClientId ?? Guid.Empty, SurveyInput.Title, SurveyInput.Mode);
+            Navigation.NavigateTo("/surveys");
+        }
+        catch (ArgumentException) { error = "Check the survey title and collection mode."; }
+        catch (UnauthorizedAccessException) { error = "Access denied."; }
+    }
+
+    private sealed class ClientModel
+    {
+        [Required, StringLength(200)] public string Name { get; set; } = "";
+    }
+    private sealed class SurveyModel
+    {
+        [Required, StringLength(200)] public string Title { get; set; } = "";
+        [Required] public Guid? ClientId { get; set; }
+        public SurveyMode Mode { get; set; }
+    }
+}
