@@ -49,3 +49,9 @@ A cobertura dos fluxos web ainda está em desenvolvimento.
 ## Catálogo
 
 Após confirmar a conta e entrar, acesse `/surveys` para cadastrar clientes e pesquisas. O catálogo confere o estado da conta a cada operação e restringe os registros ao proprietário. Não é possível criar uma pesquisa vinculada ao cliente de outra conta.
+
+## Questionários
+
+Abra uma pesquisa pelo catálogo para adicionar perguntas de texto, número, escolha única ou múltipla. Perguntas de escolha exigem opções válidas; as demais não aceitam opções. A estrutura pode ser congelada após revisão explícita, impedindo inclusões e remoções futuras.
+
+A integração também verifica atualização de pesquisas existentes, preservação de identificadores, persistência das opções e conflito entre duas conexões SQL.

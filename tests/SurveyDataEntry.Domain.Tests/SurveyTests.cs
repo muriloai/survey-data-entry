@@ -3,6 +3,26 @@ using Xunit;
 
 public class SurveyTests
 {
+    [Fact]
+    public void RestorePreservesIdentityAndFrozenStructure()
+    {
+        var id = Guid.CreateVersion7();
+        var questionId = Guid.CreateVersion7();
+        var question = Question.Restore(questionId, "Name", QuestionType.Text, true, 100, []);
+        var survey = Survey.Restore(id, Guid.CreateVersion7(), Guid.CreateVersion7(), "Restored", SurveyMode.Paper, [question], true, false);
+        Assert.Equal(id, survey.Id);
+        Assert.Equal(questionId, survey.Questions[0].Id);
+        Assert.Throws<InvalidOperationException>(() => survey.RemoveQuestion(questionId));
+    }
+
+    [Fact]
+    public void DuplicateQuestionIdentityIsRejected()
+    {
+        var survey = NewSurvey();
+        var question = new Question("Name", QuestionType.Text, true);
+        survey.AddQuestion(question);
+        Assert.Throws<ArgumentException>(() => survey.AddQuestion(question));
+    }
     private static Survey NewSurvey() => new(Guid.CreateVersion7(), Guid.CreateVersion7(), "Survey", SurveyMode.Paper);
 
     [Fact]

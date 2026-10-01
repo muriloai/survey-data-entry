@@ -6,6 +6,8 @@ using Xunit;
 using SurveyDataEntry.Application;
 using SurveyDataEntry.Infrastructure;
 using SurveyDataEntry.Domain;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 public sealed class AccountPersistenceTests
 {
@@ -24,7 +26,14 @@ public sealed class AccountPersistenceTests
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         try
         {
+            await db.GetService<IMigrator>().MigrateAsync("AddSurveyCatalog");
+            var oldClient = Guid.CreateVersion7();
+            var oldSurvey = Guid.CreateVersion7();
+            var oldOwner = Guid.CreateVersion7();
+            await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Clients (Id, OwnerId, Name) VALUES ({oldClient}, {oldOwner}, N'Existing client')");
+            await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Surveys (Id, OwnerId, ClientId, Title, Mode, Closed) VALUES ({oldSurvey}, {oldOwner}, {oldClient}, N'Existing survey', 0, 0)");
             await db.Database.MigrateAsync();
+            Assert.Empty((await new QuestionnaireStore(db).LoadAsync(oldOwner, oldSurvey, default)).Questions);
             var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = new ApplicationUser { UserName = "operator@example.test", Email = "operator@example.test" };
             Assert.True((await users.CreateAsync(user, "Initial-Password123!")).Succeeded);
@@ -41,7 +50,7 @@ public sealed class AccountPersistenceTests
             Assert.False(await users.CheckPasswordAsync(persisted, "Initial-Password123!"));
             var first = new SurveyCatalog(new TestAccount(user.Id), new CatalogStore(db));
             var clientId = await first.CreateClientAsync("Client A");
-            await first.CreateSurveyAsync(clientId, "Survey A", SurveyMode.Paper);
+            var surveyId = await first.CreateSurveyAsync(clientId, "Survey A", SurveyMode.Paper);
             var otherUser = new ApplicationUser { UserName = "other@example.test", Email = "other@example.test", EmailConfirmed = true };
             Assert.True((await users.CreateAsync(otherUser, "Other-Password123!")).Succeeded);
             var second = new SurveyCatalog(new TestAccount(otherUser.Id), new CatalogStore(db));
@@ -49,6 +58,33 @@ public sealed class AccountPersistenceTests
             Assert.Empty(await second.ListSurveysAsync());
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => second.CreateSurveyAsync(clientId, "Forbidden", SurveyMode.Online));
             Assert.Single(await first.ListSurveysAsync());
+            var editor = new Questionnaire(new TestAccount(user.Id), new CatalogStore(db), new QuestionnaireStore(db));
+            var otherEditor = new Questionnaire(new TestAccount(otherUser.Id), new CatalogStore(db), new QuestionnaireStore(db));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => otherEditor.GetAsync(surveyId));
+            await editor.AddQuestionAsync(surveyId, "Choice", QuestionType.SingleChoice, true, null, ["Yes", "No"]);
+            var questionnaire = await editor.GetAsync(surveyId);
+            Assert.Single(questionnaire.Questions);
+            Assert.Equal(new[] { "Yes", "No" }, questionnaire.Questions[0].Options);
+            await editor.RemoveQuestionAsync(surveyId, questionnaire.Questions[0].Id);
+            Assert.Empty((await editor.GetAsync(surveyId)).Questions);
+            await editor.AddQuestionAsync(surveyId, "Name", QuestionType.Text, true, 100, []);
+            await editor.FreezeAsync(surveyId);
+            Assert.True((await editor.GetAsync(surveyId)).StructureLocked);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => editor.AddQuestionAsync(surveyId, "Late", QuestionType.Text, false, null, []));
+            var concurrentId = await first.CreateSurveyAsync(clientId, "Concurrent", SurveyMode.Paper);
+            await using var concurrentDb = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseSqlServer(db.Database.GetConnectionString()).Options);
+            var questionnaireStore = new QuestionnaireStore(db);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => questionnaireStore.ChangeAsync(Guid.Parse(user.Id), concurrentId, survey =>
+            {
+                concurrentDb.Surveys.Where(s => s.Id == concurrentId).ExecuteUpdate(setters => setters.SetProperty(s => s.Closed, true));
+                survey.AddQuestion(new Question("Conflicting edit", QuestionType.Text, true));
+            }, default));
+            var afterConflict = await editor.GetAsync(concurrentId);
+            Assert.True(afterConflict.Closed);
+            Assert.Empty(afterConflict.Questions);
+            db.ChangeTracker.Clear();
+            persisted = (await users.FindByEmailAsync(user.Email))!;
             persisted.IsBlocked = true;
             await users.UpdateAsync(persisted);
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => first.ListClientsAsync());

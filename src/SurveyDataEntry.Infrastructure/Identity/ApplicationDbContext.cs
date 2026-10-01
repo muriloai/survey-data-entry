@@ -23,6 +23,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         {
             entity.ToTable("Surveys");
             entity.HasKey(s => s.Id);
+            entity.Property(s => s.QuestionsJson).IsRequired().HasDefaultValue("[]");
+            entity.Property(s => s.Version).IsRowVersion();
             entity.Property(s => s.Title).HasMaxLength(200).IsRequired();
             entity.HasIndex(s => s.OwnerId);
             entity.HasOne<ClientRow>().WithMany().HasForeignKey(s => new { s.ClientId, s.OwnerId })

@@ -10,6 +10,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<SurveyDataEntry.Application.ICurrentAccount, SurveyDataEntry.Web.CurrentAccount>();
 builder.Services.AddScoped<SurveyDataEntry.Application.ICatalogStore, SurveyDataEntry.Infrastructure.CatalogStore>();
 builder.Services.AddScoped<SurveyDataEntry.Application.SurveyCatalog>();
+builder.Services.AddScoped<SurveyDataEntry.Application.IQuestionnaireStore, SurveyDataEntry.Infrastructure.QuestionnaireStore>();
+builder.Services.AddScoped<SurveyDataEntry.Application.Questionnaire>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

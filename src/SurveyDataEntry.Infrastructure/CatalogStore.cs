@@ -21,6 +21,9 @@ public sealed class SurveyRow
     public string Title { get; set; } = "";
     public SurveyMode Mode { get; set; }
     public bool Closed { get; set; }
+    public bool StructureLocked { get; set; }
+    public string QuestionsJson { get; set; } = "[]";
+    public byte[] Version { get; set; } = [];
 }
 
 public sealed class CatalogStore(ApplicationDbContext db) : ICatalogStore

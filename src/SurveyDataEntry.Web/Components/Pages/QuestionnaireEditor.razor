@@ -1,0 +1,95 @@
+@page "/surveys/{SurveyId:guid}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.ComponentModel.DataAnnotations
+@using SurveyDataEntry.Application
+@using SurveyDataEntry.Domain
+@inject Questionnaire Service
+@inject NavigationManager Navigation
+
+<PageTitle>Questionnaire · Survey Data Entry</PageTitle>
+<main class="container">
+    <p><a href="/surveys">Surveys</a></p>
+    <h1>@(survey?.Title ?? "Questionnaire")</h1>
+    @if (error is not null) { <p role="alert">@error</p> }
+    @if (survey is not null)
+    {
+        <p>Mode: @survey.Mode · @(survey.StructureLocked ? "Structure frozen" : "Draft")</p>
+        <ol>
+        @foreach (var question in survey.Questions)
+        {
+            <li><strong>@question.Title</strong> · @question.Type @(question.Required ? "(required)" : "")
+                @if (question.MaxLength is int limit) { <span> · Maximum @limit characters</span> }
+                @if (question.Options.Count > 0) { <ul>@foreach (var option in question.Options) { <li>@option</li> }</ul> }
+            </li>
+        }
+        </ol>
+        @if (!survey.StructureLocked && !survey.Closed)
+        {
+            <h2>Add question</h2>
+            <EditForm Model="Input" FormName="question" method="post" OnValidSubmit="AddQuestion">
+                <DataAnnotationsValidator /><ValidationSummary />
+                <label>Title <InputText @bind-Value="Input.Title" maxlength="2000" /></label>
+                <label>Type <InputSelect @bind-Value="Input.Type">@foreach (var type in Enum.GetValues<QuestionType>()) { <option value="@type">@type</option> }</InputSelect></label>
+                <label><InputCheckbox @bind-Value="Input.Required" /> Required</label>
+                <label>Text limit (text questions only) <InputNumber @bind-Value="Input.MaxLength" /></label>
+                <label>Options (one per line, choice questions only) <InputTextArea @bind-Value="Input.Options" /></label>
+                <button type="submit">Add question</button>
+            </EditForm>
+            <h2>Remove a question</h2>
+            <EditForm Model="Removal" FormName="remove" method="post" OnValidSubmit="RemoveQuestion">
+                <DataAnnotationsValidator /><ValidationSummary />
+                <label>Question <InputSelect @bind-Value="Removal.Id"><option value="">Select a question</option>@foreach (var q in survey.Questions) { <option value="@q.Id">@q.Title</option> }</InputSelect></label>
+                <button type="submit">Remove</button>
+            </EditForm>
+            <h2>Freeze structure</h2>
+            <p>Freezing prevents further additions and removals. This action cannot be undone.</p>
+            <EditForm Model="Confirmation" FormName="freeze" method="post" OnValidSubmit="Freeze">
+                <label><InputCheckbox @bind-Value="Confirmation.Accepted" /> I have reviewed the questionnaire.</label>
+                <button type="submit">Freeze questionnaire</button>
+            </EditForm>
+        }
+    }
+</main>
+
+@code {
+    [Parameter] public Guid SurveyId { get; set; }
+    [SupplyParameterFromForm(FormName = "question")] private QuestionInput Input { get; set; } = default!;
+    [SupplyParameterFromForm(FormName = "remove")] private RemoveInput Removal { get; set; } = default!;
+    [SupplyParameterFromForm(FormName = "freeze")] private FreezeInput Confirmation { get; set; } = default!;
+    private Survey? survey;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new(); Removal ??= new(); Confirmation ??= new();
+        try { survey = await Service.GetAsync(SurveyId); }
+        catch (UnauthorizedAccessException) { error = "Survey access denied."; }
+    }
+
+    private async Task Run(Func<Task> command)
+    {
+        try { await command(); Navigation.NavigateTo($"/surveys/{SurveyId}"); }
+        catch (ArgumentException) { error = "Check the question title, type, options and text limit."; }
+        catch (InvalidOperationException) { error = "The questionnaire changed or its structure is frozen. Reload before trying again."; }
+        catch (UnauthorizedAccessException) { error = "Survey access denied."; }
+    }
+
+    private Task AddQuestion() => Run(() => Service.AddQuestionAsync(SurveyId, Input.Title, Input.Type, Input.Required,
+        Input.MaxLength, Input.Options.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)));
+    private Task RemoveQuestion() => Run(() => Service.RemoveQuestionAsync(SurveyId, Removal.Id ?? Guid.Empty));
+    private Task Freeze()
+    {
+        if (!Confirmation.Accepted) { error = "Review and confirm before freezing the questionnaire."; return Task.CompletedTask; }
+        return Run(() => Service.FreezeAsync(SurveyId));
+    }
+    private sealed class QuestionInput
+    {
+        [Required, StringLength(2000)] public string Title { get; set; } = "";
+        public QuestionType Type { get; set; }
+        public bool Required { get; set; } = true;
+        [Range(1, 100000)] public int? MaxLength { get; set; }
+        [StringLength(50100)] public string Options { get; set; } = "";
+    }
+    private sealed class RemoveInput { [Required] public Guid? Id { get; set; } }
+    private sealed class FreezeInput { public bool Accepted { get; set; } }
+}

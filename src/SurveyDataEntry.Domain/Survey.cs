@@ -5,12 +5,18 @@ public enum QuestionType { Text, Number, SingleChoice, MultipleChoice }
 
 public sealed class Question
 {
-    public Guid Id { get; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; } = Guid.CreateVersion7();
     public string Title { get; }
     public QuestionType Type { get; }
     public bool Required { get; }
     public int? MaxLength { get; }
     public IReadOnlyList<string> Options { get; }
+
+    public static Question Restore(Guid id, string title, QuestionType type, bool required, int? maxLength, IEnumerable<string> options)
+    {
+        if (id == Guid.Empty) throw new ArgumentException("Question ID is required.", nameof(id));
+        return new Question(title, type, required, maxLength, options) { Id = id };
+    }
 
     public Question(string title, QuestionType type, bool required, int? maxLength = null, IEnumerable<string>? options = null)
     {
@@ -30,7 +36,7 @@ public sealed class Question
 public sealed class Survey
 {
     private readonly List<Question> questions = [];
-    public Guid Id { get; } = Guid.CreateVersion7();
+    public Guid Id { get; private set; } = Guid.CreateVersion7();
     public Guid OwnerId { get; }
     public Guid ClientId { get; }
     public string Title { get; }
@@ -38,6 +44,17 @@ public sealed class Survey
     public bool StructureLocked { get; private set; }
     public bool Closed { get; private set; }
     public IReadOnlyList<Question> Questions => questions.AsReadOnly();
+
+    public static Survey Restore(Guid id, Guid ownerId, Guid clientId, string title, SurveyMode mode,
+        IEnumerable<Question> questions, bool locked, bool closed)
+    {
+        if (id == Guid.Empty) throw new ArgumentException("Survey ID is required.", nameof(id));
+        var survey = new Survey(ownerId, clientId, title, mode) { Id = id };
+        foreach (var question in questions) survey.AddQuestion(question);
+        if (locked) survey.LockStructure();
+        if (closed) survey.Close();
+        return survey;
+    }
 
     public Survey(Guid ownerId, Guid clientId, string title, SurveyMode mode)
     {
@@ -51,6 +68,7 @@ public sealed class Survey
     {
         ArgumentNullException.ThrowIfNull(question);
         EnsureEditable();
+        if (questions.Any(q => q.Id == question.Id)) throw new ArgumentException("Duplicate question.", nameof(question));
         questions.Add(question);
     }
 

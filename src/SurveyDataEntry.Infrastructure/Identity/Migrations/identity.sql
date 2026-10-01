@@ -288,3 +288,75 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127151521_AddQuestionnaire'
+)
+BEGIN
+    ALTER TABLE [Surveys] ADD [QuestionsJson] nvarchar(max) NOT NULL DEFAULT N'';
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127151521_AddQuestionnaire'
+)
+BEGIN
+    ALTER TABLE [Surveys] ADD [StructureLocked] bit NOT NULL DEFAULT CAST(0 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127151521_AddQuestionnaire'
+)
+BEGIN
+    ALTER TABLE [Surveys] ADD [Version] rowversion NOT NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127151521_AddQuestionnaire'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261127151521_AddQuestionnaire', N'10.0.15');
+END;
+
+COMMIT;
+GO
+
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127151844_RepairQuestionnaireDefaults'
+)
+BEGIN
+    UPDATE Surveys SET QuestionsJson = N'[]' WHERE QuestionsJson = N''
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127151844_RepairQuestionnaireDefaults'
+)
+BEGIN
+    DECLARE @var nvarchar(max);
+    SELECT @var = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Surveys]') AND [c].[name] = N'QuestionsJson');
+    IF @var IS NOT NULL EXEC(N'ALTER TABLE [Surveys] DROP CONSTRAINT ' + @var + ';');
+    ALTER TABLE [Surveys] ADD DEFAULT N'[]' FOR [QuestionsJson];
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127151844_RepairQuestionnaireDefaults'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261127151844_RepairQuestionnaireDefaults', N'10.0.15');
+END;
+
+COMMIT;
+GO
+

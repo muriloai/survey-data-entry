@@ -40,7 +40,7 @@
         <table><thead><tr><th>Title</th><th>Client</th><th>Mode</th></tr></thead><tbody>
             @foreach (var survey in surveys)
             {
-                <tr><td>@survey.Title</td><td>@clients.FirstOrDefault(c => c.Id == survey.ClientId)?.Name</td><td>@survey.Mode</td></tr>
+                <tr><td><a href="/surveys/@survey.Id">@survey.Title</a></td><td>@clients.FirstOrDefault(c => c.Id == survey.ClientId)?.Name</td><td>@survey.Mode</td></tr>
             }
         </tbody></table>
     }

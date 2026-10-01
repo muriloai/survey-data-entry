@@ -28,3 +28,7 @@ Cada documento segue uma estrutura padronizada contendo contexto, decisão adota
 - Uma ADR aceita não deve ser editada retrospectivamente para alterar decisões históricas.
 - Caso uma decisão seja superada por uma nova abordagem, cria-se uma nova ADR referenciando a decisão anterior com o status `substituída por [ADRX]`.
 - Todas as decisões devem manter alinhamento estrito com as diretrizes registradas no plano do produto e com as boas práticas de engenharia de software em .NET.
+
+## Decisões adicionais
+
+- [0011: Persistência do questionário e concorrência otimista](0011-persistencia-do-questionario-e-concorrencia.md)
