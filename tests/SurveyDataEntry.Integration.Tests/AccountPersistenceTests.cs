@@ -71,6 +71,24 @@ public sealed class AccountPersistenceTests
             await editor.FreezeAsync(surveyId);
             Assert.True((await editor.GetAsync(surveyId)).StructureLocked);
             await Assert.ThrowsAsync<InvalidOperationException>(() => editor.AddQuestionAsync(surveyId, "Late", QuestionType.Text, false, null, []));
+            var entry = new FormEntry(new TestAccount(user.Id), new FormStore(db));
+            var otherEntry = new FormEntry(new TestAccount(otherUser.Id), new FormStore(db));
+            var questionId = (await editor.GetAsync(surveyId)).Questions[0].Id;
+            await Assert.ThrowsAsync<ArgumentException>(() => entry.SaveAsync(surveyId, Guid.CreateVersion7(), [new(questionId, [new string('x', 101)])], true));
+            Assert.Equal(0, await entry.CountAsync(surveyId));
+            var submission = Guid.CreateVersion7();
+            var savedForm = await entry.SaveAsync(surveyId, submission, [new(questionId, ["Respondent"])], true);
+            Assert.Equal(savedForm, await entry.SaveAsync(surveyId, submission, [new(questionId, ["Respondent"])], true));
+            Assert.Equal(1, await entry.CountAsync(surveyId));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => entry.SaveAsync(surveyId, submission, [new(questionId, ["Changed"])], true));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => otherEntry.SaveAsync(surveyId, Guid.CreateVersion7(), [new(questionId, ["Intruder"])], true));
+            await Assert.ThrowsAsync<ArgumentException>(() => entry.SaveAsync(surveyId, Guid.CreateVersion7(), [new(questionId, ["Unreviewed"])], false));
+            Assert.Equal(1, await entry.CountAsync(surveyId));
+            var draftId = await first.CreateSurveyAsync(clientId, "Draft collection", SurveyMode.Paper);
+            await editor.AddQuestionAsync(draftId, "Answer", QuestionType.Text, true, 50, []);
+            var draftQuestion = (await editor.GetAsync(draftId)).Questions[0].Id;
+            await entry.SaveAsync(draftId, Guid.CreateVersion7(), [new(draftQuestion, ["First response"])], true);
+            Assert.True((await editor.GetAsync(draftId)).StructureLocked);
             var concurrentId = await first.CreateSurveyAsync(clientId, "Concurrent", SurveyMode.Paper);
             await using var concurrentDb = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseSqlServer(db.Database.GetConnectionString()).Options);
@@ -83,11 +101,14 @@ public sealed class AccountPersistenceTests
             var afterConflict = await editor.GetAsync(concurrentId);
             Assert.True(afterConflict.Closed);
             Assert.Empty(afterConflict.Questions);
+            await concurrentDb.Surveys.Where(s => s.Id == surveyId).ExecuteUpdateAsync(setters => setters.SetProperty(s => s.Closed, true));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => entry.SaveAsync(surveyId, Guid.CreateVersion7(), [new(questionId, ["After closure"])], true));
             db.ChangeTracker.Clear();
             persisted = (await users.FindByEmailAsync(user.Email))!;
             persisted.IsBlocked = true;
             await users.UpdateAsync(persisted);
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() => first.ListClientsAsync());
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => entry.SaveAsync(surveyId, Guid.CreateVersion7(), [new(questionId, ["Blocked"])], true));
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }

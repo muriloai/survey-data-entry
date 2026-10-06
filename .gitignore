@@ -7,3 +7,5 @@
 
 **/App_Data/
 
+/.vs/
+*.csproj.user

@@ -360,3 +360,42 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127153421_AddCompletedForms'
+)
+BEGIN
+    CREATE TABLE [CompletedForms] (
+        [Id] uniqueidentifier NOT NULL,
+        [SurveyId] uniqueidentifier NOT NULL,
+        [OperatorId] uniqueidentifier NOT NULL,
+        [SubmissionId] uniqueidentifier NOT NULL,
+        [CreatedAtUtc] datetimeoffset NOT NULL,
+        [AnswersJson] nvarchar(max) NOT NULL,
+        [Fingerprint] nvarchar(64) NOT NULL,
+        CONSTRAINT [PK_CompletedForms] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_CompletedForms_Surveys_SurveyId] FOREIGN KEY ([SurveyId]) REFERENCES [Surveys] ([Id]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127153421_AddCompletedForms'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_CompletedForms_SurveyId_SubmissionId] ON [CompletedForms] ([SurveyId], [SubmissionId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127153421_AddCompletedForms'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261127153421_AddCompletedForms', N'10.0.15');
+END;
+
+COMMIT;
+GO
+

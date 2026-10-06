@@ -36,7 +36,7 @@ public sealed class CompletedForm
             {
                 if (question.Type == QuestionType.Text && question.MaxLength is int limit && value.Length > limit)
                     throw new ArgumentException("Text is too long.", nameof(answers));
-                if (question.Type == QuestionType.Number && !decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out _))
+                if (question.Type == QuestionType.Number && !decimal.TryParse(value, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out _))
                     throw new ArgumentException("Invalid number.", nameof(answers));
                 if (question.Type is QuestionType.SingleChoice or QuestionType.MultipleChoice && !question.Options.Contains(value, StringComparer.Ordinal))
                     throw new ArgumentException("Invalid option.", nameof(answers));

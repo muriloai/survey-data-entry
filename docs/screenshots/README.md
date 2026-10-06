@@ -15,3 +15,9 @@ Inclusão e remoção de perguntas tipadas, opções e congelamento após revis�
 ![Editor de questionários](02-questionario/editor.png)
 
 ![Questionário congelado](02-questionario/congelado.png)
+
+## Digitação manual de fichas
+
+Ficha revisada e salva com confirmação e contador de respostas. Dados fictícios, capturados na aplicação em execução.
+
+![Ficha salva](03-fichas/ficha-salva.png)

@@ -8,7 +8,7 @@ O Survey Data Entry surgiu em 2014 para reduzir o tempo de digitação de pesqui
 
 ## Situação atual
 
-A reconstrução está em andamento. A solução já contém a base do domínio, uma aplicação Blazor e o esquema inicial de contas. Os fluxos de autenticação e os recursos de pesquisa ainda estão sendo implementados e validados; o sistema não está pronto para dados reais.
+A reconstrução está em andamento. Já é possível cadastrar clientes e pesquisas, montar questionários e registrar fichas com revisão das respostas. A aplicação possui confirmação de e-mail e recuperação de senha para desenvolvimento local. A interface e os demais recursos continuam em construção; o sistema ainda não está pronto para dados reais.
 
 ## Tecnologias
 

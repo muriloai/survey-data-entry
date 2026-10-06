@@ -12,6 +12,8 @@ builder.Services.AddScoped<SurveyDataEntry.Application.ICatalogStore, SurveyData
 builder.Services.AddScoped<SurveyDataEntry.Application.SurveyCatalog>();
 builder.Services.AddScoped<SurveyDataEntry.Application.IQuestionnaireStore, SurveyDataEntry.Infrastructure.QuestionnaireStore>();
 builder.Services.AddScoped<SurveyDataEntry.Application.Questionnaire>();
+builder.Services.AddScoped<SurveyDataEntry.Application.IFormStore, SurveyDataEntry.Infrastructure.FormStore>();
+builder.Services.AddScoped<SurveyDataEntry.Application.FormEntry>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

@@ -1,0 +1,96 @@
+@page "/surveys/{SurveyId:guid}/entry"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using SurveyDataEntry.Application
+@using SurveyDataEntry.Domain
+@inject Questionnaire Questionnaire
+@inject FormEntry Entry
+@inject NavigationManager Navigation
+
+<PageTitle>Record responses · Survey Data Entry</PageTitle>
+<main class="container">
+    <p><a href="/surveys/@SurveyId">Questionnaire</a></p>
+    <h1>Record responses</h1>
+    @if (error is not null) { <p role="alert">@error</p> }
+    @if (saved) { <p role="status">Response saved.</p> }
+    @if (survey is not null)
+    {
+        <h2>@survey.Title</h2>
+        <p>Saved forms: @count</p>
+        @if (survey.Closed) { <p>This survey is closed.</p> }
+        else if (survey.Questions.Count == 0) { <p>Add questions before recording responses.</p> }
+        else
+        {
+            <p>Use Tab to move between questions. Review all answers before saving. Use a decimal point for numbers. For multiple choice, enter one option per line.</p>
+            <EditForm Model="Input" FormName="entry" method="post" OnSubmit="Save">
+                <input type="hidden" name="Input.SubmissionId" value="@Input.SubmissionId" />
+                @for (var index = 0; index < Input.Answers.Count; index++)
+                {
+                    var item = Input.Answers[index];
+                    var question = survey.Questions.FirstOrDefault(q => q.Id == item.QuestionId);
+                    if (question is not null)
+                    {
+                        <fieldset>
+                            <legend>@(index + 1). @question.Title @(question.Required ? "(required)" : "")</legend>
+                            <input type="hidden" name="@($"Input.Answers[{index}].QuestionId")" value="@item.QuestionId" />
+                            @if (question.Options.Count > 0) { <p>Options: @string.Join(" · ", question.Options)</p> }
+                            <label>Answer <InputTextArea @bind-Value="item.Value" name="@($"Input.Answers[{index}].Value")" maxlength="100000" /></label>
+                        </fieldset>
+                    }
+                }
+                <label><InputCheckbox @bind-Value="Input.Reviewed" /> I have reviewed these answers.</label>
+                <button type="submit">Save form</button>
+            </EditForm>
+        }
+    }
+</main>
+
+@code {
+    [Parameter] public Guid SurveyId { get; set; }
+    [SupplyParameterFromQuery] private bool Saved { get; set; }
+    [SupplyParameterFromForm] private EntryInput Input { get; set; } = default!;
+    private Survey? survey;
+    private int count;
+    private bool saved;
+    private string? error;
+    protected override async Task OnInitializedAsync()
+    {
+        var firstVisit = Input is null;
+        Input ??= new();
+        saved = Saved;
+        try
+        {
+            survey = await Questionnaire.GetAsync(SurveyId);
+            count = await Entry.CountAsync(SurveyId);
+            if (firstVisit) Input.Answers = survey.Questions.Select(q => new AnswerInput { QuestionId = q.Id }).ToList();
+        }
+        catch (UnauthorizedAccessException) { error = "Survey access denied."; }
+    }
+    private async Task Save()
+    {
+        saved = false;
+        try
+        {
+            var answers = Input.Answers.Select(a => new Answer(a.QuestionId,
+                string.IsNullOrWhiteSpace(a.Value) ? [] :
+                survey?.Questions.FirstOrDefault(q => q.Id == a.QuestionId)?.Type == QuestionType.MultipleChoice
+                    ? a.Value.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    : new[] { a.Value.Trim() })).ToArray();
+            await Entry.SaveAsync(SurveyId, Input.SubmissionId, answers, Input.Reviewed);
+            Navigation.NavigateTo($"/surveys/{SurveyId}/entry?saved=true");
+        }
+        catch (ArgumentException) { error = "Check required answers, number formats, options and text limits, then confirm your review."; }
+        catch (InvalidOperationException) { error = "The survey is closed, has changed or this submission conflicts with an earlier one. Reload before retrying."; }
+        catch (UnauthorizedAccessException) { error = "Survey access denied."; }
+    }
+    private sealed class EntryInput
+    {
+        public Guid SubmissionId { get; set; } = Guid.CreateVersion7();
+        public List<AnswerInput> Answers { get; set; } = [];
+        public bool Reviewed { get; set; }
+    }
+    private sealed class AnswerInput
+    {
+        public Guid QuestionId { get; set; }
+        public string Value { get; set; } = "";
+    }
+}

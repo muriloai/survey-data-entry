@@ -197,6 +197,41 @@ namespace SurveyDataEntry.Infrastructure.Identity.Migrations
                     b.ToTable("Clients", (string)null);
                 });
 
+            modelBuilder.Entity("SurveyDataEntry.Infrastructure.FormRow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AnswersJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<Guid>("OperatorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SubmissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SurveyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SurveyId", "SubmissionId")
+                        .IsUnique();
+
+                    b.ToTable("CompletedForms", (string)null);
+                });
+
             modelBuilder.Entity("SurveyDataEntry.Infrastructure.Identity.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -412,6 +447,15 @@ namespace SurveyDataEntry.Infrastructure.Identity.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SurveyDataEntry.Infrastructure.FormRow", b =>
+                {
+                    b.HasOne("SurveyDataEntry.Infrastructure.SurveyRow", null)
+                        .WithMany()
+                        .HasForeignKey("SurveyId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

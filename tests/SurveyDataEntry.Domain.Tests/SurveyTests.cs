@@ -3,6 +3,28 @@ using Xunit;
 
 public class SurveyTests
 {
+    [Theory]
+    [InlineData("1,5")]
+    [InlineData("1,000")]
+    [InlineData("invalid")]
+    public void NumericAnswersRejectAmbiguousFormatting(string value)
+    {
+        var survey = NewSurvey();
+        var question = new Question("Number", QuestionType.Number, true);
+        survey.AddQuestion(question);
+        Assert.Throws<ArgumentException>(() => new CompletedForm(survey, Guid.CreateVersion7(), [new(question.Id, [value])]));
+        Assert.False(survey.StructureLocked);
+    }
+
+    [Fact]
+    public void NumericAnswerAcceptsDecimalPoint()
+    {
+        var survey = NewSurvey();
+        var question = new Question("Number", QuestionType.Number, true);
+        survey.AddQuestion(question);
+        var form = new CompletedForm(survey, Guid.CreateVersion7(), [new(question.Id, ["-1.5"])]);
+        Assert.Equal("-1.5", form.Answers[0].Values[0]);
+    }
     [Fact]
     public void RestorePreservesIdentityAndFrozenStructure()
     {

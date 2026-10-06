@@ -7,10 +7,20 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<ClientRow> Clients => Set<ClientRow>();
     public DbSet<SurveyRow> Surveys => Set<SurveyRow>();
+    public DbSet<FormRow> Forms => Set<FormRow>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<FormRow>(entity =>
+        {
+            entity.ToTable("CompletedForms");
+            entity.HasKey(f => f.Id);
+            entity.HasIndex(f => new { f.SurveyId, f.SubmissionId }).IsUnique();
+            entity.Property(f => f.Fingerprint).HasMaxLength(64).IsRequired();
+            entity.Property(f => f.AnswersJson).IsRequired();
+            entity.HasOne<SurveyRow>().WithMany().HasForeignKey(f => f.SurveyId).OnDelete(DeleteBehavior.Restrict);
+        });
         builder.Entity<ClientRow>(entity =>
         {
             entity.ToTable("Clients");

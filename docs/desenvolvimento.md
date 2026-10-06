@@ -55,3 +55,11 @@ Após confirmar a conta e entrar, acesse `/surveys` para cadastrar clientes e pe
 Abra uma pesquisa pelo catálogo para adicionar perguntas de texto, número, escolha única ou múltipla. Perguntas de escolha exigem opções válidas; as demais não aceitam opções. A estrutura pode ser congelada após revisão explícita, impedindo inclusões e remoções futuras.
 
 A integração também verifica atualização de pesquisas existentes, preservação de identificadores, persistência das opções e conflito entre duas conexões SQL.
+
+## Digitação de fichas
+
+Abra o questionário e selecione `Record responses`. Preencha as respostas e confirme a revisão antes de salvar. A tecla Tab permite navegar pelos campos; em múltipla escolha, informe uma opção por linha. Nesta versão, números usam ponto decimal sem separadores de milhar.
+
+A gravação valida todas as respostas antes de persistir a ficha. O primeiro envio também bloqueia a estrutura do questionário na mesma transação. Cada envio possui um identificador: repetir o mesmo envio com as mesmas respostas retorna a ficha já gravada; reutilizá-lo com respostas diferentes é recusado.
+
+A coleta desta entrega está disponível ao proprietário da pesquisa. A atribuição e o portal de operadores ainda serão implementados. Os testes verificam isolamento, rejeição de respostas inválidas, revisão obrigatória, reenvio, bloqueio de conta e encerramento da pesquisa.
