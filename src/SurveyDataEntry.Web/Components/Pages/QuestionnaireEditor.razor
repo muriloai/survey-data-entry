@@ -11,6 +11,7 @@
     <p><a href="/surveys">Surveys</a></p>
     <h1>@(survey?.Title ?? "Questionnaire")</h1>
     <p><a href="/surveys/@SurveyId/entry">Record responses</a></p>
+    <p><a href="/surveys/@SurveyId/operators">Manage operators</a></p>
     @if (error is not null) { <p role="alert">@error</p> }
     @if (survey is not null)
     {

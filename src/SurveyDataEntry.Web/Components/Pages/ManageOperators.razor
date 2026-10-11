@@ -1,0 +1,65 @@
+@page "/surveys/{SurveyId:guid}/operators"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.ComponentModel.DataAnnotations
+@using SurveyDataEntry.Application
+@inject Operators Service
+@inject NavigationManager Navigation
+
+<PageTitle>Operators · Survey Data Entry</PageTitle>
+<main>
+    <p><a href="/surveys/@SurveyId">Questionnaire</a></p>
+    <h1>Operators</h1>
+    @if (error is not null) { <p role="alert">@error</p> }
+    @if (allowed)
+    {
+        <p>Assign an existing account with a confirmed email. Blocking or removing an assignment takes effect on its next operation.</p>
+        <EditForm Model="Input" FormName="assign" method="post" OnValidSubmit="Assign">
+            <DataAnnotationsValidator /><ValidationSummary />
+            <label>Operator email <InputText @bind-Value="Input.Email" /></label>
+            <button type="submit">Assign operator</button>
+        </EditForm>
+        <ul>@foreach (var item in assignments) { <li>@item.Email · @(item.Blocked ? "Blocked" : "Active")</li> }</ul>
+        <EditForm Model="Action" FormName="action" method="post" OnValidSubmit="Apply">
+            <DataAnnotationsValidator /><ValidationSummary />
+            <label>Operator <InputSelect @bind-Value="Action.Id"><option value="">Select an operator</option>@foreach (var item in assignments) { <option value="@item.Id">@item.Email</option> }</InputSelect></label>
+            <label>Action <InputSelect @bind-Value="Action.Command"><option value="block">Block</option><option value="unblock">Unblock</option><option value="revoke">Remove assignment</option></InputSelect></label>
+            <button type="submit">Apply</button>
+        </EditForm>
+    }
+</main>
+
+@code {
+    [Parameter] public Guid SurveyId { get; set; }
+    [SupplyParameterFromForm(FormName = "assign")] private AssignInput Input { get; set; } = default!;
+    [SupplyParameterFromForm(FormName = "action")] private ActionInput Action { get; set; } = default!;
+    private IReadOnlyList<OperatorAssignment> assignments = [];
+    private string? error;
+    private bool allowed;
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new(); Action ??= new();
+        try { assignments = await Service.ListAsync(SurveyId); allowed = true; }
+        catch (UnauthorizedAccessException) { error = "Survey access denied."; }
+    }
+    private async Task Run(Func<Task> command)
+    {
+        try { await command(); Navigation.NavigateTo($"/surveys/{SurveyId}/operators"); }
+        catch (ArgumentException) { error = "Use an existing, confirmed account email."; }
+        catch (InvalidOperationException) { error = "This survey is closed."; }
+        catch (UnauthorizedAccessException) { error = "Survey access denied."; }
+    }
+    private Task Assign() => Run(() => Service.AssignAsync(SurveyId, Input.Email));
+    private Task Apply() => Run(() => Action.Command switch
+    {
+        "block" => Service.SetBlockedAsync(SurveyId, Action.Id ?? Guid.Empty, true),
+        "unblock" => Service.SetBlockedAsync(SurveyId, Action.Id ?? Guid.Empty, false),
+        "revoke" => Service.RevokeAsync(SurveyId, Action.Id ?? Guid.Empty),
+        _ => throw new ArgumentException("Invalid action")
+    });
+    private sealed class AssignInput { [Required, EmailAddress, StringLength(254)] public string Email { get; set; } = ""; }
+    private sealed class ActionInput
+    {
+        [Required] public Guid? Id { get; set; }
+        public string Command { get; set; } = "block";
+    }
+}

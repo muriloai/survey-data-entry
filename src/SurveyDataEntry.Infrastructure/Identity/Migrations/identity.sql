@@ -399,3 +399,48 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127155450_AddOperatorAssignments'
+)
+BEGIN
+    CREATE TABLE [SurveyAssignments] (
+        [Id] uniqueidentifier NOT NULL,
+        [SurveyId] uniqueidentifier NOT NULL,
+        [OperatorId] nvarchar(450) NOT NULL,
+        [Blocked] bit NOT NULL,
+        CONSTRAINT [PK_SurveyAssignments] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_SurveyAssignments_AspNetUsers_OperatorId] FOREIGN KEY ([OperatorId]) REFERENCES [AspNetUsers] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_SurveyAssignments_Surveys_SurveyId] FOREIGN KEY ([SurveyId]) REFERENCES [Surveys] ([Id]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127155450_AddOperatorAssignments'
+)
+BEGIN
+    CREATE INDEX [IX_SurveyAssignments_OperatorId] ON [SurveyAssignments] ([OperatorId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127155450_AddOperatorAssignments'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_SurveyAssignments_SurveyId_OperatorId] ON [SurveyAssignments] ([SurveyId], [OperatorId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127155450_AddOperatorAssignments'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261127155450_AddOperatorAssignments', N'10.0.15');
+END;
+
+COMMIT;
+GO
+

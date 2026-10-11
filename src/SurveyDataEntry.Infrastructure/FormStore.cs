@@ -26,8 +26,17 @@ public sealed class FormStore(ApplicationDbContext db) : IFormStore
     {
         if (!await db.Users.AnyAsync(u => u.Id == accountId.ToString() && u.EmailConfirmed && !u.IsBlocked, ct))
             throw new UnauthorizedAccessException("ACCOUNT_ACCESS_DENIED");
-        return await db.Surveys.SingleOrDefaultAsync(s => s.Id == surveyId && s.OwnerId == accountId, ct)
+        var row = await db.Surveys.SingleOrDefaultAsync(s => s.Id == surveyId && (!s.Closed || s.OwnerId == accountId) && (s.OwnerId == accountId ||
+            db.Assignments.Any(a => a.SurveyId == s.Id && a.OperatorId == accountId.ToString() && !a.Blocked)), ct)
             ?? throw new UnauthorizedAccessException("SURVEY_ACCESS_DENIED");
+        if (row.Closed && row.OwnerId != accountId) throw new UnauthorizedAccessException("SURVEY_ACCESS_DENIED");
+        return row;
+    }
+
+    public async Task<Survey> LoadAsync(Guid accountId, Guid surveyId, CancellationToken ct)
+    {
+        var row = await AuthorizeAsync(accountId, surveyId, ct);
+        return await new QuestionnaireStore(db).LoadAsync(row.OwnerId, surveyId, ct);
     }
 
     public async Task<Guid> SaveAsync(Guid accountId, Guid surveyId, Guid submissionId, IReadOnlyList<Answer> answers, CancellationToken ct)
@@ -50,7 +59,7 @@ public sealed class FormStore(ApplicationDbContext db) : IFormStore
             await transaction.CommitAsync(ct);
             return previous.Id;
         }
-        var survey = await new QuestionnaireStore(db).LoadAsync(accountId, surveyId, ct);
+        var survey = await new QuestionnaireStore(db).LoadAsync(row.OwnerId, surveyId, ct);
         var form = new CompletedForm(survey, accountId, answers);
         row.StructureLocked = survey.StructureLocked;
         db.Forms.Add(new FormRow { Id = form.Id, SurveyId = surveyId, OperatorId = accountId, SubmissionId = submissionId,
@@ -70,7 +79,7 @@ public sealed class FormStore(ApplicationDbContext db) : IFormStore
 
     public async Task<int> CountAsync(Guid accountId, Guid surveyId, CancellationToken ct)
     {
-        await AuthorizeAsync(accountId, surveyId, ct);
-        return await db.Forms.CountAsync(f => f.SurveyId == surveyId, ct);
+        var row = await AuthorizeAsync(accountId, surveyId, ct);
+        return await db.Forms.CountAsync(f => f.SurveyId == surveyId && (row.OwnerId == accountId || f.OperatorId == accountId), ct);
     }
 }

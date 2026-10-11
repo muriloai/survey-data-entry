@@ -1,0 +1,23 @@
+@page "/operator"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using SurveyDataEntry.Application
+@inject Operators Service
+
+<PageTitle>Operator portal · Survey Data Entry</PageTitle>
+<main>
+    <p><a href="/">Home</a> · <a href="/Account/Manage">Account</a></p>
+    <h1>Assigned surveys</h1>
+    @if (error is not null) { <p role="alert">@error</p> }
+    else if (surveys.Count == 0) { <p>No active surveys assigned.</p> }
+    else { <ul>@foreach (var survey in surveys) { <li><a href="/surveys/@survey.Id/entry">@survey.Title</a></li> }</ul> }
+</main>
+
+@code {
+    private IReadOnlyList<AssignedSurvey> surveys = [];
+    private string? error;
+    protected override async Task OnInitializedAsync()
+    {
+        try { surveys = await Service.AssignedAsync(); }
+        catch (UnauthorizedAccessException) { error = "Account access denied."; }
+    }
+}

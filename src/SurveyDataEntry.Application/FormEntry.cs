@@ -4,6 +4,7 @@ namespace SurveyDataEntry.Application;
 
 public interface IFormStore
 {
+    Task<Survey> LoadAsync(Guid accountId, Guid surveyId, CancellationToken ct);
     Task<Guid> SaveAsync(Guid accountId, Guid surveyId, Guid submissionId, IReadOnlyList<Answer> answers, CancellationToken ct);
     Task<int> CountAsync(Guid accountId, Guid surveyId, CancellationToken ct);
 }
@@ -21,4 +22,5 @@ public sealed class FormEntry(ICurrentAccount account, IFormStore store)
     }
 
     public Task<int> CountAsync(Guid surveyId, CancellationToken ct = default) => store.CountAsync(AccountId, surveyId, ct);
+    public Task<Survey> GetAsync(Guid surveyId, CancellationToken ct = default) => store.LoadAsync(AccountId, surveyId, ct);
 }

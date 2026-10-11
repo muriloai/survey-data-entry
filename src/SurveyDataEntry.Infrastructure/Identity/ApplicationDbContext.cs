@@ -8,10 +8,20 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<ClientRow> Clients => Set<ClientRow>();
     public DbSet<SurveyRow> Surveys => Set<SurveyRow>();
     public DbSet<FormRow> Forms => Set<FormRow>();
+    public DbSet<AssignmentRow> Assignments => Set<AssignmentRow>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<AssignmentRow>(entity =>
+        {
+            entity.ToTable("SurveyAssignments");
+            entity.HasKey(a => a.Id);
+            entity.HasIndex(a => new { a.SurveyId, a.OperatorId }).IsUnique();
+            entity.HasIndex(a => a.OperatorId);
+            entity.HasOne<SurveyRow>().WithMany().HasForeignKey(a => a.SurveyId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ApplicationUser>().WithMany().HasForeignKey(a => a.OperatorId).OnDelete(DeleteBehavior.Restrict);
+        });
         builder.Entity<FormRow>(entity =>
         {
             entity.ToTable("CompletedForms");

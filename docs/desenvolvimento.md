@@ -62,4 +62,12 @@ Abra o questionário e selecione `Record responses`. Preencha as respostas e con
 
 A gravação valida todas as respostas antes de persistir a ficha. O primeiro envio também bloqueia a estrutura do questionário na mesma transação. Cada envio possui um identificador: repetir o mesmo envio com as mesmas respostas retorna a ficha já gravada; reutilizá-lo com respostas diferentes é recusado.
 
-A coleta desta entrega está disponível ao proprietário da pesquisa. A atribuição e o portal de operadores ainda serão implementados. Os testes verificam isolamento, rejeição de respostas inválidas, revisão obrigatória, reenvio, bloqueio de conta e encerramento da pesquisa.
+A coleta está disponível ao proprietário e aos operadores com atribuição ativa. Os testes verificam isolamento, rejeição de respostas inválidas, revisão obrigatória, reenvio, bloqueio de conta e encerramento da pesquisa.
+
+## Operadores
+
+No questionário, abra `Manage operators` e atribua o e-mail de uma conta já cadastrada e confirmada. O operador acessa `/operator` para consultar pesquisas ativas atribuídas e registrar fichas. Ele não pode editar a estrutura do questionário nem consultar o catálogo do gestor. Seu contador de fichas considera somente seus próprios lançamentos.
+
+Bloquear ou remover uma atribuição corta o acesso na próxima operação, inclusive em formulários já abertos. O bloqueio vale apenas naquela pesquisa; atribuições do mesmo operador em projetos de outros gestores continuam independentes. Encerrar a pesquisa também impede novas operações do operador.
+
+O cadastro de operadores por convite e a política de senhas por projeto descrita na ADR 0004 ainda estão pendentes. Esta entrega não permite que um gestor altere a senha global da conta de outro usuário.

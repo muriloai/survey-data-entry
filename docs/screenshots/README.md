@@ -21,3 +21,13 @@ Inclusão e remoção de perguntas tipadas, opções e congelamento após revis�
 Ficha revisada e salva com confirmação e contador de respostas. Dados fictícios, capturados na aplicação em execução.
 
 ![Ficha salva](03-fichas/ficha-salva.png)
+
+## Operadores
+
+Gestão de atribuições, portal com pesquisas atribuídas e recusa após bloqueio em uma sessão já aberta. Contas e dados fictícios.
+
+![Gestão de operadores](04-operadores/gestao.png)
+
+![Portal do operador](04-operadores/portal.png)
+
+![Acesso revogado](04-operadores/acesso-revogado.png)

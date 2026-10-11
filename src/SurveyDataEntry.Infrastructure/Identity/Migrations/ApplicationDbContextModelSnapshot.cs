@@ -176,6 +176,32 @@ namespace SurveyDataEntry.Infrastructure.Identity.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("SurveyDataEntry.Infrastructure.AssignmentRow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Blocked")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("OperatorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("SurveyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperatorId");
+
+                    b.HasIndex("SurveyId", "OperatorId")
+                        .IsUnique();
+
+                    b.ToTable("SurveyAssignments", (string)null);
+                });
+
             modelBuilder.Entity("SurveyDataEntry.Infrastructure.ClientRow", b =>
                 {
                     b.Property<Guid>("Id")
@@ -447,6 +473,21 @@ namespace SurveyDataEntry.Infrastructure.Identity.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SurveyDataEntry.Infrastructure.AssignmentRow", b =>
+                {
+                    b.HasOne("SurveyDataEntry.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("OperatorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SurveyDataEntry.Infrastructure.SurveyRow", null)
+                        .WithMany()
+                        .HasForeignKey("SurveyId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

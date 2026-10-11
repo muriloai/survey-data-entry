@@ -2,16 +2,19 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using SurveyDataEntry.Application
 @using SurveyDataEntry.Domain
-@inject Questionnaire Questionnaire
 @inject FormEntry Entry
 @inject NavigationManager Navigation
 
 <PageTitle>Record responses · Survey Data Entry</PageTitle>
 <main class="container">
-    <p><a href="/surveys/@SurveyId">Questionnaire</a></p>
+    <p><a href="/operator">Assigned surveys</a> · <a href="/surveys">My surveys</a></p>
     <h1>Record responses</h1>
     @if (error is not null) { <p role="alert">@error</p> }
     @if (saved) { <p role="status">Response saved.</p> }
+    @if (survey is null)
+    {
+        <EditForm Model="Input" FormName="entry" method="post" OnSubmit="Save" />
+    }
     @if (survey is not null)
     {
         <h2>@survey.Title</h2>
@@ -59,11 +62,11 @@
         saved = Saved;
         try
         {
-            survey = await Questionnaire.GetAsync(SurveyId);
+            survey = await Entry.GetAsync(SurveyId);
             count = await Entry.CountAsync(SurveyId);
             if (firstVisit) Input.Answers = survey.Questions.Select(q => new AnswerInput { QuestionId = q.Id }).ToList();
         }
-        catch (UnauthorizedAccessException) { error = "Survey access denied."; }
+        catch (UnauthorizedAccessException) { survey = null; saved = false; error = "Survey access denied."; }
     }
     private async Task Save()
     {
