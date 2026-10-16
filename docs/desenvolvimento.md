@@ -71,3 +71,11 @@ No questionário, abra `Manage operators` e atribua o e-mail de uma conta já ca
 Bloquear ou remover uma atribuição corta o acesso na próxima operação, inclusive em formulários já abertos. O bloqueio vale apenas naquela pesquisa; atribuições do mesmo operador em projetos de outros gestores continuam independentes. Encerrar a pesquisa também impede novas operações do operador.
 
 O cadastro de operadores por convite e a política de senhas por projeto descrita na ADR 0004 ainda estão pendentes. Esta entrega não permite que um gestor altere a senha global da conta de outro usuário.
+
+## Resultados e encerramento
+
+No questionário, abra `Results and closure`. O gestor consulta o total de fichas, quantas respostas foram dadas a cada pergunta e as contagens das opções. Em múltipla escolha, uma ficha pode contar em mais de uma opção; a contagem de perguntas respondidas considera a ficha uma única vez.
+
+As fichas individuais são exibidas em páginas de até 25 registros, ordenadas das mais recentes para as mais antigas. Os horários são apresentados em UTC. A tabulação percorre os registros sem manter todas as fichas em memória, retendo somente os contadores e a página exibida. O custo de leitura ainda cresce com o volume de respostas, portanto relatórios de grande volume exigirão outra estratégia de agregação.
+
+Somente o proprietário tem acesso aos resultados. Encerrar exige confirmação explícita, impede novos lançamentos e remove a pesquisa do portal dos operadores. As fichas e os resultados continuam disponíveis ao gestor. A aplicação ainda não oferece reabertura da pesquisa.

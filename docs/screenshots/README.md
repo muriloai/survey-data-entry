@@ -31,3 +31,11 @@ Gestão de atribuições, portal com pesquisas atribuídas e recusa após bloque
 ![Portal do operador](04-operadores/portal.png)
 
 ![Acesso revogado](04-operadores/acesso-revogado.png)
+
+## Resultados e encerramento
+
+Tabulação das respostas de demonstração e consulta preservada depois de encerrar a coleta.
+
+![Tabulação](05-resultados/tabulacao.png)
+
+![Pesquisa encerrada](05-resultados/encerrada.png)

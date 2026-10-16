@@ -42,4 +42,10 @@ public sealed class Questionnaire(ICurrentAccount account, ICatalogStore account
             survey.LockStructure();
         }, ct);
     }
+
+    public async Task CloseAsync(Guid surveyId, bool confirmed, CancellationToken ct = default)
+    {
+        if (!confirmed) throw new ArgumentException("CLOSURE_CONFIRMATION_REQUIRED");
+        await store.ChangeAsync(await OwnerAsync(ct), surveyId, survey => survey.Close(), ct);
+    }
 }

@@ -1,0 +1,78 @@
+@page "/surveys/{SurveyId:guid}/results"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using SurveyDataEntry.Application
+@using SurveyDataEntry.Domain
+@inject SurveyResults Results
+@inject Questionnaire Questionnaire
+@inject NavigationManager Navigation
+
+<PageTitle>Results · Survey Data Entry</PageTitle>
+<main>
+    <p><a href="/surveys/@SurveyId">Questionnaire</a></p>
+    <h1>Results</h1>
+    @if (error is not null) { <p role="alert">@error</p> }
+    @if (report is not null)
+    {
+        <h2>@report.Title</h2>
+        <p>@(report.Closed ? "Closed" : "Open") · Total forms: @report.Total</p>
+        <h2>Tabulation</h2>
+        @foreach (var question in report.Questions)
+        {
+            <section>
+                <h3>@question.Title</h3>
+                <p>Answered: @question.Answered · Unanswered: @(report.Total - question.Answered)</p>
+                @if (question.Options.Count > 0)
+                {
+                    <table><thead><tr><th>Option</th><th>Selections</th></tr></thead><tbody>
+                    @foreach (var option in question.Options) { <tr><td>@option.Key</td><td>@option.Value</td></tr> }
+                    </tbody></table>
+                }
+            </section>
+        }
+        <h2>Recorded forms</h2>
+        <p>Page @report.Page · Up to @report.PageSize forms per page. Times are UTC.</p>
+        @foreach (var entry in report.Entries)
+        {
+            <details><summary>@entry.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm:ss") · @entry.Id</summary>
+                <dl>@foreach (var q in report.Questions) { <dt>@q.Title</dt><dd>@string.Join("; ", entry.Answers.FirstOrDefault(a => a.QuestionId == q.Id)?.Values ?? [])</dd> }</dl>
+            </details>
+        }
+        @if (report.Page > 1) { <a href="/surveys/@SurveyId/results?page=@(report.Page - 1)">Previous</a> }
+        @if ((long)report.Page * report.PageSize < report.Total) { <a href="/surveys/@SurveyId/results?page=@(report.Page + 1)">Next</a> }
+        @if (!report.Closed)
+        {
+            <h2>Close survey</h2>
+            <p>Closing stops new submissions and removes this survey from operator portals. Results remain available. This action cannot be undone.</p>
+        }
+    }
+    <EditForm Model="Confirmation" FormName="closure" method="post" OnSubmit="Close">
+        @if (report is { Closed: false })
+        {
+            <label><InputCheckbox @bind-Value="Confirmation.Accepted" /> I confirm that collection is finished.</label>
+            <button type="submit">Close survey</button>
+        }
+    </EditForm>
+</main>
+
+@code {
+    [Parameter] public Guid SurveyId { get; set; }
+    [SupplyParameterFromQuery(Name = "page")] private int? Page { get; set; }
+    [SupplyParameterFromForm] private ConfirmationInput Confirmation { get; set; } = default!;
+    private ResultReport? report;
+    private string? error;
+    protected override async Task OnInitializedAsync()
+    {
+        Confirmation ??= new();
+        try { report = await Results.GetAsync(SurveyId, Page ?? 1); }
+        catch (UnauthorizedAccessException) { error = "Results access denied."; }
+        catch (ArgumentOutOfRangeException) { error = "Invalid page."; }
+    }
+    private async Task Close()
+    {
+        try { await Questionnaire.CloseAsync(SurveyId, Confirmation.Accepted); Navigation.NavigateTo($"/surveys/{SurveyId}/results"); }
+        catch (ArgumentException) { error = "Confirm before closing the survey."; }
+        catch (UnauthorizedAccessException) { error = "Survey access denied."; }
+        catch (InvalidOperationException) { error = "The survey changed. Reload before trying again."; }
+    }
+    private sealed class ConfirmationInput { public bool Accepted { get; set; } }
+}
